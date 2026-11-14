@@ -13,6 +13,14 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:studs}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      pool-name: is-labs-pool
+      maximum-pool-size: 10
+      minimum-idle: 10
+      connection-timeout: 3000  # 3sec
+      idle-timeout: 300000      # 5min
+      max-lifetime: 300000
+      leak-detection-threshold: 60000
   jpa:
     hibernate:
       ddl-auto: update
