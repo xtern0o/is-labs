@@ -23,7 +23,7 @@ function logout() {
       <div class="money-separator" aria-hidden="true">
         <img :src="moneySeparator" alt="" />
       </div>
-      <RouterLink class="brand-lockup" to="/"><strong>is_lab2</strong></RouterLink>
+      <RouterLink class="brand-lockup" to="/"><strong>is_labs</strong></RouterLink>
       <div class="money-separator" aria-hidden="true">
         <img :src="moneySeparator" alt="" />
       </div>

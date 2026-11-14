@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="is_lab1.main" target="17" />
+      <module name="is_lab1.test" target="17" />
+      <module name="is_lab2" target="17" />
+    </bytecodeTargetLevel>
+  </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="is_lab1.main" options="-parameters" />
       <module name="is_lab1.test" options="-parameters" />
-      <module name="is_lab2" options="-parameters" />
-      <module name="is_lab2.main" options="-parameters" />
-      <module name="is_lab2.test" options="-parameters" />
+      <module name="is_labs" options="-parameters" />
+      <module name="is_labs.main" options="-parameters" />
+      <module name="is_labs.test" options="-parameters" />
     </option>
   </component>
 </project>
