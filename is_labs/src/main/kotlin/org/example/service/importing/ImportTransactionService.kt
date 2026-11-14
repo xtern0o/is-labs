@@ -62,7 +62,6 @@ class ImportTransactionService(
         request.persons.forEach {
             createPerson(it)
             personsCount++
-
         }
 
         request.movies.forEach {

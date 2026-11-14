@@ -15,10 +15,7 @@ class HoconImportParser(
     private val objectMapper: ObjectMapper,
     private val validator: Validator,
 ) {
-    fun <T: Any> parse(
-        content: String,
-        targetClass: Class<T>
-    ): T {
+    fun <T: Any> parse(content: String, targetClass: Class<T>): T {
         val config = try {
             ConfigFactory.parseString(content).resolve()
         } catch (e: ConfigException) {

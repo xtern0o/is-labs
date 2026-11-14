@@ -1,4 +1,4 @@
-# is_lab1_frontend
+# is_labs_frontend
 
 This template should help get you started developing with Vue 3 in Vite.
 
