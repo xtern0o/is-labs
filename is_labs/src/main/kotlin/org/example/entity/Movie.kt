@@ -1,5 +1,6 @@
 package org.example.entity
 
+import jakarta.persistence.Cacheable
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -17,11 +18,15 @@ import jakarta.validation.constraints.PositiveOrZero
 import org.example.dto.movie.response.MovieResponse
 import org.example.entity.enums.MovieGenre
 import org.example.entity.enums.MpaaRating
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.jetbrains.annotations.NotNull
 import java.util.Date
 
 @Entity
 @Table(name = "movies")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 class Movie(
     @field:Id
     @field:GeneratedValue(strategy = GenerationType.IDENTITY)

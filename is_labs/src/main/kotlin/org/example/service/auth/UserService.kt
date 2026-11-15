@@ -1,5 +1,6 @@
 package org.example.service.auth
 
+import org.example.aspect.LogJpaL2CacheStats
 import org.example.dto.auth.request.SetRoleRequest
 import org.example.dto.auth.request.UserLoginRequest
 import org.example.dto.auth.request.UserRegisterRequest
@@ -49,6 +50,7 @@ class UserService(
         return user.toResponse()
     }
 
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getById(id: UUID): UserResponse =
         userRepository.findById(id)

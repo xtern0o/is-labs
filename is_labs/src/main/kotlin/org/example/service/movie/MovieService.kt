@@ -1,5 +1,6 @@
 package org.example.service.movie
 
+import org.example.aspect.LogJpaL2CacheStats
 import org.example.dto.movie.request.AwardOscarsByLengthRequest
 import org.example.dto.movie.request.MovieUpsertRequest
 import org.example.dto.movie.response.AwardOscarsResponse
@@ -40,6 +41,8 @@ class MovieService(
         return movies.map { it.toResponse() }
     }
 
+    @LogJpaL2CacheStats
+    @Transactional(readOnly = true)
     fun getById(id: Int): MovieResponse = findMovieDetailed(id).toResponse()
 
     @Transactional(isolation = Isolation.SERIALIZABLE)

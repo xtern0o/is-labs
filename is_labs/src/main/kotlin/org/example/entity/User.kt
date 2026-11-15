@@ -1,5 +1,6 @@
 package org.example.entity
 
+import jakarta.persistence.Cacheable
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -11,10 +12,14 @@ import jakarta.persistence.Table
 import jakarta.validation.constraints.NotBlank
 import org.example.dto.auth.response.UserResponse
 import org.example.entity.enums.Role
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.util.UUID
 
 @Entity
 @Table(name = "users")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 class User(
     @field:Id
     @field:GeneratedValue(strategy = GenerationType.UUID)

@@ -1,5 +1,6 @@
 package org.example.entity
 
+import jakarta.persistence.Cacheable
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -13,10 +14,14 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import org.example.dto.importing.response.ImportHistoryResponse
 import org.example.entity.enums.ImportStatus
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.time.Instant
 import java.util.UUID
 
 @Entity
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 class ImportHistory(
     @field:Id
     @field:GeneratedValue(strategy = GenerationType.UUID)

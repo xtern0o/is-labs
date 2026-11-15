@@ -1,5 +1,6 @@
 package org.example.entity
 
+import jakarta.persistence.Cacheable
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -9,9 +10,13 @@ import jakarta.persistence.Table
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import org.example.dto.coordinates.response.CoordinatesResponse
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
 
 @Entity
 @Table(name = "coordinates")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 class Coordinates(
     @field:Id
     @field:GeneratedValue(strategy = GenerationType.IDENTITY)

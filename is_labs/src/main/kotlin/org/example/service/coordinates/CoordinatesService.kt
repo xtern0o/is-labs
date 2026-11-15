@@ -1,5 +1,6 @@
 package org.example.service.coordinates
 
+import org.example.aspect.LogJpaL2CacheStats
 import org.example.dto.coordinates.request.CoordinatesUpsertRequest
 import org.example.dto.coordinates.response.CoordinatesResponse
 import org.example.entity.Coordinates
@@ -21,6 +22,8 @@ class CoordinatesService(
     fun getPage(pageable: Pageable): Page<CoordinatesResponse> =
         coordinatesRepository.findAll(pageable).map { it.toResponse() }
 
+    @LogJpaL2CacheStats
+    @Transactional(readOnly = true)
     fun getById(id: Int): CoordinatesResponse =
         findCoordinates(id).toResponse()
 

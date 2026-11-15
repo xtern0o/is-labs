@@ -1,5 +1,6 @@
 package org.example.entity
 
+import jakarta.persistence.Cacheable
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -16,9 +17,13 @@ import jakarta.validation.constraints.Positive
 import org.example.dto.person.response.PersonResponse
 import org.example.entity.enums.Color
 import org.example.entity.enums.Country
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
 
 @Entity
 @Table(name = "persons")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 class Person(
     @field:Id
     @field:GeneratedValue(strategy = GenerationType.IDENTITY)

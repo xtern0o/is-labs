@@ -24,10 +24,20 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+      cache:
+        region.factory_class: infinispan
+        use_second_level_cache: true
+        # конфиг для 1 экземпляра приложения
+        infinispan.cfg: org/infinispan/hibernate/cache/commons/builder/infinispan-configs-local.xml
+      generate_statistics: true # для проверки работы кэшей
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+    jakarta:
+      persistence:
+        sharedCache:
+          mode: ENABLE_SELECTIVE # кэшироуем только помеченные сущности
   servlet:
     multipart:
       max-file-size: 4MB
