@@ -45,15 +45,6 @@ const historyPages = ref(0)
 const historyLoading = ref(false)
 const isAdmin = computed(() => auth.role === 'ADMIN')
 
-const statusLabels: Record<ImportStatus, string> = {
-  CREATED: 'создано',
-  FILE_STORED: 'файл сохранён',
-  PREPARED: 'подготовлено',
-  ROLLBACK_REQUIRED: 'требуется откат',
-  SUCCESS: 'успешно',
-  FAILED: 'ошибка',
-}
-
 function isFailureStatus(status: ImportStatus) {
   return status === 'FAILED' || status === 'ROLLBACK_REQUIRED'
 }
@@ -184,7 +175,7 @@ onMounted(loadHistory)
         <article v-for="item in history" v-else :key="item.id" class="history-item">
           <div class="history-summary">
             <span class="status" :class="item.status.toLowerCase()">
-              {{ statusLabels[item.status] }}
+              {{ item.status }}
             </span>
             <time :datetime="item.createdAt">
               {{ dateFormatter.format(new Date(item.createdAt)) }}
