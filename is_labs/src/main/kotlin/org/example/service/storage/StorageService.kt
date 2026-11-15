@@ -60,4 +60,8 @@ class StorageService(
             it.bucket(bucket)
             it.key(key)
         }.asByteArray()
+
+    fun delete(key: String) {
+        s3Template.deleteObject(bucket, key)
+    }
 }

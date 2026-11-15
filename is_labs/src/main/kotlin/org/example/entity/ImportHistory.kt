@@ -42,7 +42,7 @@ class ImportHistory(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var status: ImportStatus = ImportStatus.STARTED,
+    var status: ImportStatus = ImportStatus.CREATED,
 
     @Column
     var locationsCount: Int? = null,

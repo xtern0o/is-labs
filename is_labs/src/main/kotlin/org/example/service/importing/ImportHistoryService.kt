@@ -54,6 +54,7 @@ class ImportHistoryService(
             fileETag = fileInfo.eTag
             fileContentType = fileInfo.contentType
             fileObjectKey = fileInfo.key
+            status = ImportStatus.FILE_STORED
         }.toResponse()
     }
 
@@ -84,6 +85,12 @@ class ImportHistoryService(
     fun markFailed(historyId: UUID) {
         val history = historyRepository.findById(historyId).orElseThrow()
         history.status = ImportStatus.FAILED
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun markPrepared(historyId: UUID) {
+        val history = historyRepository.findById(historyId).orElseThrow()
+        history.status = ImportStatus.PREPARED
     }
 
     @PreAuthorize("#userId.toString() == authentication.name or hasRole('ADMIN')")

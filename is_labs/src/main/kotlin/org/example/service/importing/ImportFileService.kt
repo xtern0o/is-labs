@@ -24,12 +24,13 @@ class ImportFileService(
         file: MultipartFile,
         userId: UUID,
     ): ImportHistoryResponse {
-        val historyId = historyService.start(userId)
+        val historyId = historyService.start(userId) // CREATED
+        var storedFileInfo: StoredFileInfoResponse? = null
 
         return try {
-
-            val storedFileInfo = storageService.upload(historyId, file)
-            historyService.attachFile(historyId, storedFileInfo)
+            // S3 stage
+            storedFileInfo = storageService.upload(historyId, file)
+            historyService.attachFile(historyId, storedFileInfo) // FILE_STORED
 
             val content = file.inputStream
                 .bufferedReader(StandardCharsets.UTF_8)
@@ -39,9 +40,26 @@ class ImportFileService(
                 content,
                 EntityImportFileRequest::class.java,
             )
-            transactionService.importEntities(request, historyId)
+
+            historyService.markPrepared(historyId) // PREPARED
+
+            transactionService.importEntities(request, historyId) // SUCCESS
 
         } catch (exception: Exception) {
+            if (storedFileInfo != null) {
+                try {
+                    storageService.delete(storedFileInfo.key)
+                    historyService.markFailed(historyId)
+                } catch (compensationException: Exception) {
+                    // если не удалось удалить - s3 упало прям вот во время вау
+                    exception.addSuppressed(compensationException)
+                    // historyService.markRollbackRequired(historyId)
+                    // TODO: сделать если не лень
+                }
+            } else {
+                historyService.markFailed(historyId)
+            }
+
             historyService.markFailed(historyId)
             throw exception
         }

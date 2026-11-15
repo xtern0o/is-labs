@@ -39,7 +39,10 @@ class ImportTransactionService(
     /**
      * Импорт данных и обновление статуса
      */
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional(
+        isolation = Isolation.SERIALIZABLE,
+        rollbackFor = [Exception::class]
+    )
     fun importEntities(
         request: EntityImportFileRequest,
         historyId: UUID,
@@ -77,6 +80,7 @@ class ImportTransactionService(
             this.personsCount = personsCount
             this.coordinatesCount = coordinatesCount
             this.locationsCount = locationsCount
+            this.status = ImportStatus.SUCCESS
         }
 
         return history.toResponse()

@@ -2,13 +2,20 @@
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 
+import danger from '@/assets/img/danger-18465_256.gif'
 import radioactive from '@/assets/img/radioactive-19946_256.gif'
 import { apiDownload, apiGet, apiPostFile } from '@/config/api'
 import { showError } from '@/shared/errors'
 import { useAuthStore } from '@/stores/auth'
 import { useDatabaseStore } from '@/stores/database'
 
-type ImportStatus = 'STARTED' | 'SUCCESS' | 'FAILED'
+type ImportStatus =
+  | 'CREATED'
+  | 'FILE_STORED'
+  | 'PREPARED'
+  | 'ROLLBACK_REQUIRED'
+  | 'SUCCESS'
+  | 'FAILED'
 type HistoryScope = 'mine' | 'all'
 
 interface ImportHistory {
@@ -22,6 +29,8 @@ interface ImportHistory {
   locationsCount: number | null
   fileObjectKey: string | null
   fileName: string | null
+  fileContentType: string | null
+  fileSize: number | null
 }
 
 const auth = useAuthStore()
@@ -37,9 +46,26 @@ const historyLoading = ref(false)
 const isAdmin = computed(() => auth.role === 'ADMIN')
 
 const statusLabels: Record<ImportStatus, string> = {
-  STARTED: 'в процессе',
+  CREATED: 'создано',
+  FILE_STORED: 'файл сохранён',
+  PREPARED: 'подготовлено',
+  ROLLBACK_REQUIRED: 'требуется откат',
   SUCCESS: 'успешно',
   FAILED: 'ошибка',
+}
+
+function isFailureStatus(status: ImportStatus) {
+  return status === 'FAILED' || status === 'ROLLBACK_REQUIRED'
+}
+
+function formatFileSize(bytes: number | null) {
+  if (bytes === null) return 'размер неизвестен'
+  if (bytes < 1024) return `${bytes} B`
+
+  const kilobytes = bytes / 1024
+  if (kilobytes < 1024) return `${kilobytes.toFixed(1)} KB`
+
+  return `${(kilobytes / 1024).toFixed(1)} MB`
 }
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -127,8 +153,8 @@ onMounted(loadHistory)
 
 <template>
   <section class="import-view">
-    <aside class="panel">
-      <header>IMPORT HISTORY</header>
+    <fieldset class="panel">
+      <legend>IMPORT HISTORY</legend>
 
       <div class="history-tabs" role="tablist" aria-label="Import history scope">
         <button
@@ -183,8 +209,14 @@ onMounted(loadHistory)
                   ><b>{{ item.locationsCount }}</b> locations</span
                 >
               </div>
-              <small v-else-if="item.status === 'FAILED'">объекты не были созданы</small>
+              <small v-else-if="isFailureStatus(item.status)">объекты не были созданы</small>
               <small v-else>файл обрабатывается</small>
+
+              <div v-if="item.fileName" class="history-file-info">
+                <span>file: <strong>{{ item.fileName }}</strong></span>
+                <span>| {{ formatFileSize(item.fileSize) }}</span>
+                <span v-if="item.fileContentType">| {{ item.fileContentType }}</span>
+              </div>
 
               <a
                 v-if="item.fileObjectKey"
@@ -195,14 +227,18 @@ onMounted(loadHistory)
                 скачать файл онлайн
               </a>
             </div>
-            <img class="history-gif" :src="radioactive" alt="" aria-hidden="true" />
+            <img
+              class="history-gif"
+              :src="isFailureStatus(item.status) ? danger : radioactive"
+              alt=""
+              aria-hidden="true"
+            />
           </div>
         </article>
       </div>
 
       <div class="history-pagination">
         <button
-          class="text-button"
           type="button"
           :disabled="historyPage === 0"
           @click="changeHistoryPage(-1)"
@@ -214,7 +250,6 @@ onMounted(loadHistory)
           >/{{ String(Math.max(historyPages, 1)).padStart(2, '0') }}
         </span>
         <button
-          class="text-button"
           type="button"
           :disabled="historyPage + 1 >= historyPages"
           @click="changeHistoryPage(1)"
@@ -222,42 +257,40 @@ onMounted(loadHistory)
           next &rarr;
         </button>
       </div>
-    </aside>
+    </fieldset>
 
-    <form class="panel" @submit.prevent="importFile">
-      <header>new HOCON (.conf) import</header>
+    <form class="import-panel-form" @submit.prevent="importFile">
+      <fieldset class="panel">
+        <legend>new HOCON (.conf) import</legend>
 
-      <div class="file-form">
-        <details class="format-help">
-          <summary>выберите <strong>.conf</strong> или <strong>.hocon</strong> файл.</summary>
-          <p>
-            <a
-              href="https://github.com/lightbend/config/blob/main/HOCON.md"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              подробнее о формате hocon
-            </a>
-          </p>
-        </details>
+        <div class="file-form">
+          <details class="format-help">
+            <summary>выберите <strong>.conf</strong> или <strong>.hocon</strong> файл.</summary>
+            <p>
+              <a
+                href="https://github.com/lightbend/config/blob/main/HOCON.md"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                подробнее о формате hocon
+              </a>
+            </p>
+          </details>
 
-        <input type="file" accept=".conf,.hocon" @change="selectFile" />
-        <button
-          class="xp-button xp-button--primary import-button"
-          type="submit"
-          :disabled="!file || importing"
-        >
-          {{ importing ? 'importing...' : 'import file' }}
-        </button>
+          <input type="file" accept=".conf,.hocon" @change="selectFile" />
+          <button type="submit" :disabled="!file || importing">
+            {{ importing ? 'importing...' : 'import file' }}
+          </button>
 
-        <div v-if="result" class="import-result" role="status">
-          <strong>import successful!!</strong>
-          <span>movies: {{ result.moviesCount }}</span>
-          <span>persons: {{ result.personsCount }}</span>
-          <span>coordinates: {{ result.coordinatesCount }}</span>
-          <span>locations: {{ result.locationsCount }}</span>
+          <div v-if="result" class="import-result" role="status">
+            <strong>import successful!!</strong>
+            <span>movies: {{ result.moviesCount }}</span>
+            <span>persons: {{ result.personsCount }}</span>
+            <span>coordinates: {{ result.coordinatesCount }}</span>
+            <span>locations: {{ result.locationsCount }}</span>
+          </div>
         </div>
-      </div>
+      </fieldset>
     </form>
   </section>
 </template>
@@ -267,242 +300,217 @@ onMounted(loadHistory)
   padding: 18px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
+  font: 16px/1.35 'Times New Roman', Times, serif;
 }
 
 .panel {
-  min-height: 390px;
+  min-width: 0;
+  min-height: 480px;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  border: 2px solid var(--ink);
-  background: #fff9e8;
+  border: 2px groove #b9a98a;
+  background: var(--paper);
 }
 
-.import-button {
-  font-size: 16px;
+.panel > legend {
+  margin-left: 8px;
+  padding: 0 6px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 14px;
+  font-weight: 700;
 }
 
-header {
-  padding: 10px;
-  color: #ffedcb;
-  background: var(--burgundy);
-  font:
-    800 12px/1 'Courier New',
-    monospace;
+.import-panel-form {
+  min-width: 0;
+  margin: 0;
+}
+
+.import-panel-form > .panel {
+  width: 100%;
+  height: 100%;
 }
 
 .history-tabs {
-  display: flex;
-  border-bottom: 2px solid var(--ink);
+  padding: 8px 10px;
+  border-bottom: 1px solid #a35237;
 }
 
 .history-tabs button {
-  flex: 1;
-  padding: 9px;
+  margin-right: 6px;
+  padding: 5px 10px;
   border: 0;
-  border-right: 1px solid var(--ink);
-  color: var(--brick);
-  background: #f6d9a4;
-  font:
-    800 13px/1 'Courier New',
-    monospace;
+  color: white;
+  background: var(--brick);
   cursor: pointer;
 }
 
-.history-tabs button:last-child {
-  border-right: 0;
-}
-
 .history-tabs button.active {
-  color: #ffedcb;
+  font-weight: 800;
   background: var(--burgundy);
 }
 
 .history-list {
-  min-height: 0;
   height: 430px;
-  padding: 12px;
-  display: grid;
-  align-content: start;
-  gap: 10px;
+  padding: 6px 12px;
   overflow: auto;
 }
 
 .history-item {
-  padding: 10px;
-  display: grid;
-  gap: 7px;
-  border: 1px solid var(--ink);
-  background: #fffdf3;
-  font:
-    700 13px/1.25 'Courier New',
-    monospace;
+  padding: 12px 2px;
+  border-bottom: 1px dashed #805a49;
+}
+
+.history-item:last-child {
+  border-bottom: 0;
 }
 
 .history-body {
+  margin-top: 7px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 58px;
+  grid-template-columns: minmax(0, 1fr) 52px;
   align-items: start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .history-details {
   display: grid;
-  gap: 7px;
+  gap: 5px;
 }
 
 .history-details > strong {
   color: var(--brick);
-  font-size: 15px;
 }
 
 .history-gif {
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
 }
 
 .history-item code {
   overflow-wrap: anywhere;
   color: #805a49;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .history-summary {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.history-summary time,
-.history-item small {
-  color: #805a49;
-}
-
 .status {
-  padding: 4px 6px;
-  border: 1px solid currentColor;
+  font-weight: 800;
 }
 
 .status.success {
   color: #27622f;
-  background: #dbedcb;
 }
 
-.status.failed {
+.status.failed,
+.status.rollback_required {
   color: #8b2823;
-  background: #f3c3aa;
 }
 
-.status.started {
+.status.created,
+.status.file_stored,
+.status.prepared {
   color: #7b5716;
-  background: #f6dfa2;
 }
 
 .history-counts {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
 }
 
 .history-counts b {
   color: var(--brick);
 }
 
-.history-download {
-  justify-self: start;
-  color: var(--burgundy);
-  font-size: 13px;
-  font-weight: 800;
-  text-underline-offset: 2px;
-}
-
-.history-download:hover {
-  color: var(--brick);
+.history-file-info {
+  padding: 4px 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 5px;
+  border: 1px solid #a99782;
+  color: inherit;
+  background: var(--paper);
+  font: inherit;
 }
 
 .history-pagination {
   margin-top: auto;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 17px;
+  padding: 9px;
   border-top: 1px solid var(--ink);
-  font:
-    800 13px/1 'Courier New',
-    monospace;
+  text-align: center;
 }
 
-.history-pagination strong {
-  padding: 2px 4px;
-  color: #fff1ca;
-  background: var(--brick);
-  font-size: 16px;
+.history-pagination button {
+  margin: 0 8px;
+  padding: 0;
+  border: 0;
+  color: #0000ee;
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-.import-result {
-  padding: 12px 16px;
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  gap: 6px 20px;
-  border: 2px solid var(--ink);
-  background: #f6d9a4;
-  text-align: left;
+.history-pagination button:disabled {
+  color: #777;
+  text-decoration: none;
+  cursor: default;
 }
 
-.import-result strong {
-  grid-column: 1 / -1;
-}
-
-.empty-state,
-.file-form {
-  min-height: 350px;
-  padding: 24px;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 14px;
+.empty-state {
+  padding: 70px 20px;
   color: #805a49;
   text-align: center;
-  font:
-    700 16px/1.4 'Courier New',
-    monospace;
 }
 
-.history-list > .empty-state {
-  min-height: 280px;
+.empty-state > * {
+  display: block;
+  margin: 6px 0;
 }
 
-.empty-state strong,
-.file-form strong {
-  color: var(--brick);
+.file-form {
+  min-height: 430px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
 }
 
 .file-form p {
-  margin: 0;
-}
-
-.format-help {
-  color: var(--brick);
-  font-size: 15px;
+  margin: 8px 0 0;
 }
 
 .format-help summary {
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 800;
-  text-decoration: underline;
 }
 
-.format-help p {
-  margin: 8px 0 0;
-  font-size: 14px;
+.import-result {
+  padding: 10px 14px;
+  border: 2px groove #b77855;
+  background: #f6d9a4;
+  text-align: left;
 }
 
-.format-help a {
-  color: var(--burgundy);
+.import-result strong,
+.import-result span {
+  display: block;
+}
+
+.import-result strong {
+  margin-bottom: 5px;
+  color: var(--brick);
 }
 
 @media (max-width: 760px) {
@@ -512,7 +520,6 @@ header {
   }
 
   .panel,
-  .empty-state,
   .file-form {
     min-height: 180px;
   }
