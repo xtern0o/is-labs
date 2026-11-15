@@ -56,7 +56,7 @@ function updateValue(event: Event) {
 label {
   color: var(--brick);
   font:
-    800 10px/1 'Courier New',
+    800 12px/1 'Courier New',
     monospace;
 }
 
@@ -76,7 +76,7 @@ select {
   color: var(--ink);
   background: #fffaf0;
   font:
-    700 12px/1.2 'Courier New',
+    700 14px/1.2 'Courier New',
     monospace;
 }
 

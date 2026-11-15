@@ -237,13 +237,13 @@ function formatValue(key: string, value: unknown) {
   color: #ffedcb;
   background: var(--burgundy);
   font:
-    800 10px/1.2 'Courier New',
+    800 12px/1.2 'Courier New',
     monospace;
 }
 
 .results-header span {
   color: #eebd78;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .operation-row {
@@ -271,7 +271,7 @@ function formatValue(key: string, value: unknown) {
   gap: 11px;
   color: var(--ink);
   font:
-    700 11px/1.35 'Courier New',
+    700 13px/1.35 'Courier New',
     monospace;
 }
 
@@ -281,7 +281,7 @@ function formatValue(key: string, value: unknown) {
   color: #fff1ca;
   background: var(--brick);
   text-align: center;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .operation-controls {
@@ -301,7 +301,7 @@ function formatValue(key: string, value: unknown) {
   color: var(--ink);
   background: #fffaf0;
   font:
-    700 11px/1.2 'Courier New',
+    700 13px/1.2 'Courier New',
     monospace;
 }
 
@@ -320,7 +320,7 @@ function formatValue(key: string, value: unknown) {
   gap: 6px;
   color: var(--brick);
   font:
-    800 9px/1 'Courier New',
+    800 11px/1 'Courier New',
     monospace;
   white-space: nowrap;
 }
@@ -352,13 +352,13 @@ function formatValue(key: string, value: unknown) {
 
 .empty-results p {
   color: var(--brick);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 
 .empty-results span {
   color: #805a49;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .result-table-wrap {

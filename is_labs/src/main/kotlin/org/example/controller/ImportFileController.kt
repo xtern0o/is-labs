@@ -4,19 +4,25 @@ import org.example.dto.importing.response.ImportHistoryResponse
 import org.example.service.event.DatabaseEventsService
 import org.example.service.importing.ImportFileService
 import org.example.service.importing.ImportHistoryService
+import org.example.service.storage.StorageService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
+import org.springframework.http.ContentDisposition
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 @RestController
@@ -25,6 +31,7 @@ class ImportFileController(
     private val importFileService: ImportFileService,
     private val historyService: ImportHistoryService,
     private val eventsService: DatabaseEventsService,
+    private val storageService: StorageService,
 ) {
 
     @PostMapping(
@@ -67,4 +74,39 @@ class ImportFileController(
         ) pageable: Pageable,
     ): Page<ImportHistoryResponse> =
         historyService.getPage(pageable)
+
+    /**
+     * Скачка файлов
+     */
+    @GetMapping("/history/{id}/file")
+    fun downloadFile(
+        @PathVariable id: UUID,
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<ByteArray> {
+        val userId = UUID.fromString(jwt.subject)
+        val isAdmin = jwt.getClaimAsString("role") == "ADMIN"
+
+        val fileInfo = historyService.getFileInfo(
+            historyId = id,
+            requesterId = userId,
+            isAdmin = isAdmin,
+        )
+
+        val content = storageService.download(fileInfo.objectKey)
+
+        val contentType = fileInfo.contentType
+            ?.let { runCatching { MediaType.parseMediaType(it) }.getOrNull() }
+            ?: MediaType.APPLICATION_OCTET_STREAM
+
+        val disposition = ContentDisposition
+            .attachment()
+            .filename(fileInfo.fileName, StandardCharsets.UTF_8)
+            .build()
+
+        return ResponseEntity.ok()
+            .contentType(contentType)
+            .contentLength(content.size.toLong())
+            .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+            .body(content)
+    }
 }

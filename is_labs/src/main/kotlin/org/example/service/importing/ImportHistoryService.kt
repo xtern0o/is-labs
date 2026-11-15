@@ -1,5 +1,6 @@
 package org.example.service.importing
 
+import org.example.dto.importing.response.ImportFileInfo
 import org.example.dto.importing.response.ImportHistoryResponse
 import org.example.dto.storage.response.StoredFileInfoResponse
 import org.example.entity.ImportHistory
@@ -54,6 +55,29 @@ class ImportHistoryService(
             fileContentType = fileInfo.contentType
             fileObjectKey = fileInfo.key
         }.toResponse()
+    }
+
+    @Transactional(readOnly = true)
+    fun getFileInfo(
+        historyId: UUID,
+        requesterId: UUID,
+        isAdmin: Boolean,
+    ): ImportFileInfo {
+        val history = historyRepository.findById(historyId).orElseThrow {
+            NoSuchElementException("import history $historyId not found")
+        }
+
+        if (!isAdmin && history.user.id != requesterId) {
+            throw IllegalStateException("access denied")
+        }
+
+        return ImportFileInfo(
+            objectKey = requireNotNull(history.fileObjectKey) {
+                "file is not attached to import history"
+            },
+            fileName = history.fileName ?: "import.hocon",
+            contentType = history.fileContentType,
+        )
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

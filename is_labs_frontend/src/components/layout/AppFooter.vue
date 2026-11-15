@@ -60,7 +60,7 @@ import eagle from '@/assets/img/eagle-15084_256.gif'
 .footer-copy strong {
   display: block;
   color: var(--brick);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 @media (max-width: 760px) {

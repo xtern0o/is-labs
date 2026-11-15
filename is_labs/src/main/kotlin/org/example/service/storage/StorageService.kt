@@ -54,4 +54,10 @@ class StorageService(
             eTag = storedObject.eTag(),
         )
     }
+
+    fun download(key: String): ByteArray =
+        s3Client.getObjectAsBytes {
+            it.bucket(bucket)
+            it.key(key)
+        }.asByteArray()
 }

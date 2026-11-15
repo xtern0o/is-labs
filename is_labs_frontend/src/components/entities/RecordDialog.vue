@@ -276,18 +276,18 @@ watch(() => [props.mode, props.entityType, props.recordId] as const, loadInitial
 .dialog-header span {
   margin: 0;
   font:
-    800 11px/1.2 'Courier New',
+    800 13px/1.2 'Courier New',
     monospace;
 }
 
 .dialog-header span {
   color: var(--yellow);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .record-back {
   font:
-    800 9px/1 'Courier New',
+    800 11px/1 'Courier New',
     monospace;
 }
 

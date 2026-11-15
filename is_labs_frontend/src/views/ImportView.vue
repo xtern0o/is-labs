@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import radioactive from '@/assets/img/radioactive-19946_256.gif'
-import { apiGet, apiPostFile } from '@/config/api'
+import { apiDownload, apiGet, apiPostFile } from '@/config/api'
 import { showError } from '@/shared/errors'
 import { useAuthStore } from '@/stores/auth'
 import { useDatabaseStore } from '@/stores/database'
@@ -20,6 +20,8 @@ interface ImportHistory {
   personsCount: number | null
   coordinatesCount: number | null
   locationsCount: number | null
+  fileObjectKey: string | null
+  fileName: string | null
 }
 
 const auth = useAuthStore()
@@ -99,6 +101,26 @@ async function importFile() {
   }
 }
 
+async function downloadFile(item: ImportHistory) {
+  try {
+    const blob = await apiDownload(`/imports/history/${item.id}/file`)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = item.fileName || 'import.hocon'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    showError(
+      'не удалось скачать файл :((',
+      error instanceof Error ? error.message : 'нам не сообщили что за ошибка',
+    )
+  }
+}
+
 watch(importHistoryVersion, () => void loadHistory())
 onMounted(loadHistory)
 </script>
@@ -163,6 +185,15 @@ onMounted(loadHistory)
               </div>
               <small v-else-if="item.status === 'FAILED'">объекты не были созданы</small>
               <small v-else>файл обрабатывается</small>
+
+              <a
+                v-if="item.fileObjectKey"
+                class="history-download"
+                href="#"
+                @click.prevent="downloadFile(item)"
+              >
+                скачать файл онлайн
+              </a>
             </div>
             <img class="history-gif" :src="radioactive" alt="" aria-hidden="true" />
           </div>
@@ -248,7 +279,7 @@ onMounted(loadHistory)
 }
 
 .import-button {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 header {
@@ -256,7 +287,7 @@ header {
   color: #ffedcb;
   background: var(--burgundy);
   font:
-    800 10px/1 'Courier New',
+    800 12px/1 'Courier New',
     monospace;
 }
 
@@ -273,7 +304,7 @@ header {
   color: var(--brick);
   background: #f6d9a4;
   font:
-    800 11px/1 'Courier New',
+    800 13px/1 'Courier New',
     monospace;
   cursor: pointer;
 }
@@ -304,7 +335,7 @@ header {
   border: 1px solid var(--ink);
   background: #fffdf3;
   font:
-    700 11px/1.25 'Courier New',
+    700 13px/1.25 'Courier New',
     monospace;
 }
 
@@ -322,7 +353,7 @@ header {
 
 .history-details > strong {
   color: var(--brick);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .history-gif {
@@ -334,7 +365,7 @@ header {
 .history-item code {
   overflow-wrap: anywhere;
   color: #805a49;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .history-summary {
@@ -379,6 +410,18 @@ header {
   color: var(--brick);
 }
 
+.history-download {
+  justify-self: start;
+  color: var(--burgundy);
+  font-size: 13px;
+  font-weight: 800;
+  text-underline-offset: 2px;
+}
+
+.history-download:hover {
+  color: var(--brick);
+}
+
 .history-pagination {
   margin-top: auto;
   padding: 12px;
@@ -388,7 +431,7 @@ header {
   gap: 17px;
   border-top: 1px solid var(--ink);
   font:
-    800 11px/1 'Courier New',
+    800 13px/1 'Courier New',
     monospace;
 }
 
@@ -396,7 +439,7 @@ header {
   padding: 2px 4px;
   color: #fff1ca;
   background: var(--brick);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .import-result {
@@ -424,7 +467,7 @@ header {
   color: #805a49;
   text-align: center;
   font:
-    700 14px/1.4 'Courier New',
+    700 16px/1.4 'Courier New',
     monospace;
 }
 
@@ -443,19 +486,19 @@ header {
 
 .format-help {
   color: var(--brick);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .format-help summary {
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   text-decoration: underline;
 }
 
 .format-help p {
   margin: 8px 0 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .format-help a {

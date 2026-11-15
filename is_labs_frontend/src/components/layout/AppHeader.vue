@@ -66,7 +66,7 @@ function logout() {
 .variant {
   margin: 0;
   font:
-    700 13px/1.35 'Courier New',
+    700 15px/1.35 'Courier New',
     monospace;
   text-transform: uppercase;
 }
@@ -77,7 +77,7 @@ function logout() {
 
 .variant strong {
   color: var(--brick);
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .account-block {
@@ -105,7 +105,7 @@ function logout() {
 .account-name {
   color: var(--brick);
   font:
-    800 14px/1.2 'Courier New',
+    800 16px/1.2 'Courier New',
     monospace;
 }
 
@@ -125,7 +125,7 @@ function logout() {
 .brand-lockup strong {
   display: block;
   font:
-    900 32px/0.95 Georgia,
+    900 36px/0.95 Georgia,
     serif;
   letter-spacing: -0.045em;
   text-shadow: 2px 2px 0 var(--yellow);
@@ -156,13 +156,13 @@ function logout() {
   }
 
   .brand-lockup strong {
-    font-size: 30px;
+    font-size: 32px;
   }
 
   .identity,
   .account-block {
     grid-row: 2;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .money-separator {

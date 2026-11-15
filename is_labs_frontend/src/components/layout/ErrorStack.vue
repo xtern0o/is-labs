@@ -74,11 +74,11 @@ import { closeError, errors } from '@/shared/errors'
 
 .error-text strong {
   color: #b22222;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .error-text span {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.3;
 }
 </style>
