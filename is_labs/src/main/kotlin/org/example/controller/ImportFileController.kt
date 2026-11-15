@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
-import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 @RestController
@@ -39,12 +38,8 @@ class ImportFileController(
             throw IllegalArgumentException("file can not be empty")
         }
 
-        val content = file.inputStream
-            .bufferedReader(StandardCharsets.UTF_8)
-            .use { it.readText() }
-
         val userId = UUID.fromString(jwt.subject)
-        val response = importFileService.importFile(content, userId)
+        val response = importFileService.importFile(file, userId)
 
         eventsService.publish("import_history")
         return response

@@ -1,3 +1,3 @@
 package org.example.aspect
 
-annotation class LogJpaL2CacheStats()
+annotation class LogJpaL2CacheStats

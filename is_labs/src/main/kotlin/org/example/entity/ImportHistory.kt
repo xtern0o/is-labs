@@ -21,7 +21,7 @@ import java.util.UUID
 
 @Entity
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 class ImportHistory(
     @field:Id
     @field:GeneratedValue(strategy = GenerationType.UUID)
@@ -56,17 +56,38 @@ class ImportHistory(
     @Column
     var personsCount: Int? = null,
 
+    // s3 related fields
+
+    @Column(name = "file_object_key")
+    var fileObjectKey: String? = null,
+
+    @Column(name = "file_name")
+    var fileName: String? = null,
+
+    @Column(name = "file_content_type")
+    var fileContentType: String? = null,
+
+    @Column(name = "file_size")
+    var fileSize: Long? = null,
+
+    @Column(name = "file_etag")
+    var fileETag: String? = null,
+
     )
 
 fun ImportHistory.toResponse() =
     ImportHistoryResponse(
-        id = requireNotNull(this.id),
+        id = requireNotNull(id),
+        createdAt = requireNotNull(createdAt),
+        status = status,
+        userId = requireNotNull(user.id),
+        username = user.name,
         moviesCount = moviesCount,
         personsCount = personsCount,
         coordinatesCount = coordinatesCount,
         locationsCount = locationsCount,
-        userId = requireNotNull(user.id),
-        username = requireNotNull(user.name),
-        createdAt = requireNotNull(this.createdAt),
-        status = status,
+        fileObjectKey = fileObjectKey,
+        fileName = fileName,
+        fileContentType = fileContentType,
+        fileSize = fileSize,
     )

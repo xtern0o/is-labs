@@ -6,6 +6,10 @@ jwt:
   access-ttl-seconds: 900
   refresh-ttl-seconds: 604800
 
+app:
+  s3:
+    imports-bucket: ${S3_BUCKET:imports}
+
 spring:
   config:
     import: "optional:file:./.env[.properties]"
@@ -38,6 +42,15 @@ spring:
       persistence:
         sharedCache:
           mode: ENABLE_SELECTIVE # кэшироуем только помеченные сущности
+  cloud:
+    aws:
+      credentials:
+        access-key: ${S3_ACCESS_KEY}
+        secret-key: ${S3_SECRET_KEY}
+      s3:
+        endpoint: ${S3_ENDPOINT}
+        region: us-east-1
+        path-style-access-enabled: true
   servlet:
     multipart:
       max-file-size: 4MB

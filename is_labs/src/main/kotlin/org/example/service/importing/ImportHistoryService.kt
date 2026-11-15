@@ -1,6 +1,7 @@
 package org.example.service.importing
 
 import org.example.dto.importing.response.ImportHistoryResponse
+import org.example.dto.storage.response.StoredFileInfoResponse
 import org.example.entity.ImportHistory
 import org.example.entity.enums.ImportStatus
 import org.example.entity.toResponse
@@ -33,6 +34,26 @@ class ImportHistoryService(
                 ImportHistory(user = user),
             ).id,
         )
+    }
+
+    /**
+     * После загрузки в S3 прикрепляем мета информацию о файле
+     * REQUIRES_NEW, чтобы метаданные зафиксировались независимо от основной транзакции импорта
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun attachFile(
+        historyId: UUID,
+        fileInfo: StoredFileInfoResponse
+    ): ImportHistoryResponse {
+        val history = historyRepository.findById(historyId).orElseThrow()
+
+        return history.apply {
+            fileName = fileInfo.originalFileName
+            fileSize = fileInfo.size
+            fileETag = fileInfo.eTag
+            fileContentType = fileInfo.contentType
+            fileObjectKey = fileInfo.key
+        }.toResponse()
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

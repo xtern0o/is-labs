@@ -21,10 +21,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-//    implementation("org.springframework.boot:spring-boot-starter-aop")
 
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
+    implementation(platform("io.awspring.cloud:spring-cloud-aws-dependencies:4.2.0"))
+    implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
 
     implementation("org.infinispan:infinispan-hibernate-cache-v66:16.3.1")
 

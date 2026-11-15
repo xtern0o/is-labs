@@ -21,4 +21,8 @@ data class ImportHistoryResponse(
     val personsCount: Int?,
     val coordinatesCount: Int?,
     val locationsCount: Int?,
+    val fileObjectKey: String?,
+    val fileName: String?,
+    val fileContentType: String?,
+    val fileSize: Long?,
 )
