@@ -22,6 +22,7 @@ class ParallelImportSimulation : Simulation() {
      * username,password,file
      */
     private val users = csv("users.csv").queue()
+    private val cleanupUser = csv("users.csv").circular()
 
     private val httpProtocol = http
         .baseUrl("http://localhost:55080")
@@ -80,9 +81,55 @@ class ParallelImportSimulation : Simulation() {
             }
         }
 
+    // очистка для воспроихводимости
+    private val cleanupScenario = scenario("Cleanup imported entities")
+        .feed(cleanupUser)
+        .exec(loginRequest)
+        .exec(
+            http("find test locations")
+                .get("/api/location")
+                .header("Authorization", "Bearer #{accessToken}")
+                .queryParam("nameFilter", "Race transaction")
+                .queryParam("size", 100)
+                .check(
+                    status().`is`(200),
+                    jsonPath("$.content[*].id").findAll().saveAs("locationIds"),
+                )
+        )
+        .exec(
+            http("Find test coordinates")
+                .get("/api/coordinates")
+                .header("Authorization", "Bearer #{accessToken}")
+                .queryParam("size", 100)
+                .queryParam("sort", "id,desc")
+                .check(
+                    status().`is`(200),
+                    jsonPath("$.content[?(@.x == 454.75 && @.y == 99001)].id")
+                        .findAll()
+                        .saveAs("coordinatesIds"),
+                )
+        )
+        .foreach("#{locationIds}", "locationId").on(
+            http("Delete test location")
+                .delete("/api/location/#{locationId}")
+                .header("Authorization", "Bearer #{accessToken}")
+                .check(status().`is`(204))
+        )
+        .foreach("#{coordinatesIds}", "coordinatesId").on(
+            http("Delete test coordinates")
+                .delete("/api/coordinates/#{coordinatesId}")
+                .header("Authorization", "Bearer #{accessToken}")
+                .check(status().`is`(204))
+        )
+
     init {
         setUp(
-            concurrentImportScenario.injectOpen(atOnceUsers(2))
+            concurrentImportScenario
+                .injectOpen(atOnceUsers(2))
+                .andThen(
+                    cleanupScenario
+                        .injectOpen(atOnceUsers(1))
+                )
         )
             .protocols(httpProtocol)
             .maxDuration(Duration.ofSeconds(30)) // защита от вечного rendezVous
