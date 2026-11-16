@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { ENTITY_DEFINITIONS } from '@/domain/entitySchemas'
 import { showError } from '@/shared/errors'
+import { useDatabaseStore } from '@/stores/database'
 import type {
   ColumnDefinition,
   DataTabId,
@@ -32,6 +33,8 @@ const props = defineProps<{
   collections: EntityCollections
 }>()
 
+const { fetchRecordById } = useDatabaseStore()
+
 const emit = defineEmits<{
   close: []
   save: [mutation: RecordMutation, onSaved: () => void]
@@ -44,6 +47,9 @@ const currentId = ref(props.recordId)
 const fields = ref<DraftField[]>([])
 const originalValues = ref<string[]>([])
 const history = ref<RecordSnapshot[]>([])
+const relatedRecordCache = new Map<string, EntityRecord>()
+const relatedRecordRequests = new Map<string, Promise<EntityRecord>>()
+const relationLookupTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 const definition = computed(() => ENTITY_DEFINITIONS[currentEntityType.value])
 const isCreatingRoot = computed(() => props.mode === 'create' && history.value.length === 0)
@@ -58,6 +64,52 @@ function normalizeId(id: string) {
 function findRecord(entityType: DataTabId, id: string) {
   const normalizedId = normalizeId(id)
   return props.collections[entityType].find((record) => normalizeId(record.id) === normalizedId)
+}
+
+function relatedRecordKey(entityType: DataTabId, id: string) {
+  return entityType + ':' + normalizeId(id)
+}
+
+function getRelatedRecord(entityType: DataTabId, id: string): Promise<EntityRecord> {
+  const normalizedId = normalizeId(id.trim())
+  const key = relatedRecordKey(entityType, normalizedId)
+  const cached = relatedRecordCache.get(key)
+  if (cached) return Promise.resolve(cached)
+
+  const pending = relatedRecordRequests.get(key)
+  if (pending) return pending
+
+  const request = fetchRecordById(entityType, normalizedId)
+    .then((record) => {
+      relatedRecordCache.set(key, record)
+      return record
+    })
+    .finally(() => relatedRecordRequests.delete(key))
+
+  relatedRecordRequests.set(key, request)
+  return request
+}
+
+function prefetchRelation(field: DraftField, value: string) {
+  const target = field.column.relation
+  if (!target) return
+
+  const timerKey = currentEntityType.value + ':' + field.column.key
+  const previousTimer = relationLookupTimers.get(timerKey)
+  if (previousTimer) clearTimeout(previousTimer)
+
+  if (!value.trim()) {
+    relationLookupTimers.delete(timerKey)
+    return
+  }
+
+  relationLookupTimers.set(
+    timerKey,
+    setTimeout(() => {
+      relationLookupTimers.delete(timerKey)
+      void getRelatedRecord(target, value).catch(() => undefined)
+    }, 300),
+  )
 }
 
 function loadRecord(entityType: DataTabId, record: EntityRecord) {
@@ -89,13 +141,18 @@ function loadInitialRecord() {
   if (record) loadRecord(props.entityType, record)
 }
 
-function openRelation(field: DraftField) {
+async function openRelation(field: DraftField) {
   const target = field.column.relation
   if (!target || !field.value) return
 
-  const relatedRecord = findRecord(target, field.value)
-  if (!relatedRecord) {
-    showError('Связанный объект не найден', 'Запись с ID ' + field.value + ' отсутствует')
+  let relatedRecord: EntityRecord
+  try {
+    relatedRecord = await getRelatedRecord(target, field.value)
+  } catch (error) {
+    showError(
+      'Связанный объект не найден',
+      error instanceof Error ? error.message : 'Запись с ID ' + field.value + ' отсутствует',
+    )
     return
   }
 
@@ -170,6 +227,10 @@ function deleteRecord() {
 watch(() => [props.mode, props.entityType, props.recordId] as const, loadInitialRecord, {
   immediate: true,
 })
+
+onBeforeUnmount(() => {
+  relationLookupTimers.forEach(clearTimeout)
+})
 </script>
 
 <template>
@@ -206,6 +267,7 @@ watch(() => [props.mode, props.entityType, props.recordId] as const, loadInitial
             v-model="field.value"
             :field-id="`record-field-${index}`"
             :column="field.column"
+            @relation-input="prefetchRelation(field, $event)"
             @open-relation="openRelation(field)"
           />
         </div>

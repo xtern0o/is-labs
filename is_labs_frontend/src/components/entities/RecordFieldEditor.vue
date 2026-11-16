@@ -9,11 +9,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
+  relationInput: [value: string]
   openRelation: []
 }>()
 
 function updateValue(event: Event) {
-  emit('update:modelValue', (event.target as HTMLInputElement | HTMLSelectElement).value)
+  const value = (event.target as HTMLInputElement | HTMLSelectElement).value
+  emit('update:modelValue', value)
+  if (props.column.relation) emit('relationInput', value)
 }
 </script>
 
