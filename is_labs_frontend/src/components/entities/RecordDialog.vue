@@ -47,8 +47,6 @@ const currentId = ref(props.recordId)
 const fields = ref<DraftField[]>([])
 const originalValues = ref<string[]>([])
 const history = ref<RecordSnapshot[]>([])
-const relatedRecordCache = new Map<string, EntityRecord>()
-const relatedRecordRequests = new Map<string, Promise<EntityRecord>>()
 const relationLookupTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
 const definition = computed(() => ENTITY_DEFINITIONS[currentEntityType.value])
@@ -66,28 +64,9 @@ function findRecord(entityType: DataTabId, id: string) {
   return props.collections[entityType].find((record) => normalizeId(record.id) === normalizedId)
 }
 
-function relatedRecordKey(entityType: DataTabId, id: string) {
-  return entityType + ':' + normalizeId(id)
-}
-
 function getRelatedRecord(entityType: DataTabId, id: string): Promise<EntityRecord> {
   const normalizedId = normalizeId(id.trim())
-  const key = relatedRecordKey(entityType, normalizedId)
-  const cached = relatedRecordCache.get(key)
-  if (cached) return Promise.resolve(cached)
-
-  const pending = relatedRecordRequests.get(key)
-  if (pending) return pending
-
-  const request = fetchRecordById(entityType, normalizedId)
-    .then((record) => {
-      relatedRecordCache.set(key, record)
-      return record
-    })
-    .finally(() => relatedRecordRequests.delete(key))
-
-  relatedRecordRequests.set(key, request)
-  return request
+  return fetchRecordById(entityType, normalizedId)
 }
 
 function prefetchRelation(field: DraftField, value: string) {
