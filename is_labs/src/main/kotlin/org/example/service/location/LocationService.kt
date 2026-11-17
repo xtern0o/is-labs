@@ -18,6 +18,7 @@ class LocationService(
     private val locationRepository: LocationRepository,
     private val personRepository: PersonRepository
 ) {
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getPage(
         nameFilter: String?,

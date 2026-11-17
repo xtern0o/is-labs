@@ -1,5 +1,6 @@
 package org.example.service.importing
 
+import org.example.aspect.LogJpaL2CacheStats
 import org.example.dto.importing.response.ImportFileInfo
 import org.example.dto.importing.response.ImportHistoryResponse
 import org.example.dto.storage.response.StoredFileInfoResponse
@@ -58,6 +59,7 @@ class ImportHistoryService(
         }.toResponse()
     }
 
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getFileInfo(
         historyId: UUID,
@@ -93,6 +95,7 @@ class ImportHistoryService(
         history.status = ImportStatus.PREPARED
     }
 
+    @LogJpaL2CacheStats
     @PreAuthorize("#userId.toString() == authentication.name or hasRole('ADMIN')")
     @Transactional(readOnly = true)
     fun getPageByUserId(
@@ -104,6 +107,7 @@ class ImportHistoryService(
         return history.map { it.toResponse() }
     }
 
+    @LogJpaL2CacheStats
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
     fun getPage(

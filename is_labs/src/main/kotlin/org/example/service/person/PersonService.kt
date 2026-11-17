@@ -22,6 +22,7 @@ class PersonService(
     private val movieRepository: MovieRepository
 ) {
 
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getPage(nameFilter: String?, pageable: Pageable): Page<PersonResponse> {
         val persons = if (nameFilter.isNullOrBlank()) {

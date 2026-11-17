@@ -27,6 +27,7 @@ class MovieService(
     private val personRepository: PersonRepository,
     private val coordinatesRepository: CoordinatesRepository
 ) {
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getPage(
         nameFilter: String?,
