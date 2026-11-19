@@ -66,6 +66,10 @@ export async function apiGet(path: string) {
   return (await request(path)).json()
 }
 
+export async function apiDownload(path: string) {
+  return (await request(path)).blob()
+}
+
 export async function apiPost(path: string, body: object) {
   const response = await request(path, {
     method: 'POST',

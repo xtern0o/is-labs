@@ -173,7 +173,7 @@ onMounted(loadUsers)
 
 .window-titlebar h1 {
   margin: 0;
-  font: 800 13px/1 'Courier New', monospace;
+  font: 800 15px/1 'Courier New', monospace;
   letter-spacing: 0.08em;
 }
 
@@ -214,7 +214,7 @@ onMounted(loadUsers)
   align-items: center;
   justify-content: center;
   gap: 22px;
-  font: 700 11px/1 'Courier New', monospace;
+  font: 700 13px/1 'Courier New', monospace;
   text-transform: uppercase;
 }
 
@@ -244,7 +244,7 @@ onMounted(loadUsers)
 
 .dialog-header h2 {
   margin: 0;
-  font: 800 11px/1.2 'Courier New', monospace;
+  font: 800 13px/1.2 'Courier New', monospace;
 }
 
 .role-form {
@@ -255,14 +255,14 @@ onMounted(loadUsers)
   display: grid;
   gap: 7px;
   color: var(--brick);
-  font: 800 10px/1 'Courier New', monospace;
+  font: 800 12px/1 'Courier New', monospace;
 }
 
 .role-form select {
   padding: 10px;
   border: 2px solid var(--ink);
   background: #fffdf3;
-  font: 700 12px/1 'Courier New', monospace;
+  font: 700 14px/1 'Courier New', monospace;
 }
 
 .dialog-actions {

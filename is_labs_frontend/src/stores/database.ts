@@ -190,6 +190,20 @@ export const useDatabaseStore = defineStore('database', () => {
     }
   }
 
+  async function fetchRecordById(entityType: DataTabId, id: string): Promise<EntityRecord> {
+    const numericId = Number(id)
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+      throw new Error('ID должен быть положительным целым числом')
+    }
+
+    const response = (await apiGet(ENTITY_ENDPOINTS[entityType] + '/' + numericId)) as Record<
+      string,
+      unknown
+    >
+
+    return toEntityRecord(response)
+  }
+
   function startUpdates() {
     if (unsubscribeUpdates) return
 
@@ -296,6 +310,7 @@ export const useDatabaseStore = defineStore('database', () => {
     changePage,
     toggleSort,
     loadPage,
+    fetchRecordById,
     startUpdates,
     stopUpdates,
     openRecord,

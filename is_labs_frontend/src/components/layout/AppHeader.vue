@@ -1,19 +1,61 @@
 <script setup lang="ts">
 import moneySeparator from '@/assets/img/money-18548_256.gif'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
+import { apiGet, apiPut } from '@/config/api'
+import { showError } from '@/shared/errors'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 const router = useRouter()
 
 const isAdmin = computed(() => auth.role === 'ADMIN')
+const l2StatsEnabled = ref(false)
+const l2StatsPending = ref(false)
+
+async function loadL2Stats() {
+  try {
+    const stats = (await apiGet('/admin/l2-stats')) as { enabled: boolean }
+    l2StatsEnabled.value = stats.enabled
+  } catch (error) {
+    showError(
+      'не удалось получить состояние L2 cache',
+      error instanceof Error ? error.message : 'нам не сообщили что за ошибка',
+    )
+  }
+}
+
+async function toggleL2Stats() {
+  const enabled = !l2StatsEnabled.value
+  l2StatsPending.value = true
+
+  try {
+    await apiPut(`/admin/l2-stats?enabled=${enabled}`, {})
+    l2StatsEnabled.value = enabled
+  } catch (error) {
+    showError(
+      'не удалось переключить логирование L2 cache',
+      error instanceof Error ? error.message : 'нам не сообщили что за ошибка',
+    )
+  } finally {
+    l2StatsPending.value = false
+  }
+}
 
 function logout() {
   auth.logout()
   void router.replace('/auth')
 }
+
+watch(
+  isAdmin,
+  (admin) => {
+    if (admin) void loadL2Stats()
+    else l2StatsEnabled.value = false
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -34,6 +76,17 @@ function logout() {
           </strong>
           <div class="account-actions">
             <RouterLink v-if="isAdmin" class="xp-button admin-link" to="/admin">admin</RouterLink>
+            <button
+              v-if="isAdmin"
+              class="xp-button"
+              :class="{ 'xp-button--primary': l2StatsEnabled }"
+              type="button"
+              :disabled="l2StatsPending"
+              title="Включить или выключить логирование статистики L2 JPA Cache"
+              @click="toggleL2Stats"
+            >
+              L2 LOG: {{ l2StatsPending ? '...' : l2StatsEnabled ? 'ON' : 'OFF' }}
+            </button>
             <button class="xp-button" type="button" @click="logout">выйти из аккаунта</button>
           </div>
         </div>
@@ -66,7 +119,7 @@ function logout() {
 .variant {
   margin: 0;
   font:
-    700 13px/1.35 'Courier New',
+    700 15px/1.35 'Courier New',
     monospace;
   text-transform: uppercase;
 }
@@ -77,7 +130,7 @@ function logout() {
 
 .variant strong {
   color: var(--brick);
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .account-block {
@@ -105,7 +158,7 @@ function logout() {
 .account-name {
   color: var(--brick);
   font:
-    800 14px/1.2 'Courier New',
+    800 16px/1.2 'Courier New',
     monospace;
 }
 
@@ -125,7 +178,7 @@ function logout() {
 .brand-lockup strong {
   display: block;
   font:
-    900 32px/0.95 Georgia,
+    900 36px/0.95 Georgia,
     serif;
   letter-spacing: -0.045em;
   text-shadow: 2px 2px 0 var(--yellow);
@@ -156,13 +209,13 @@ function logout() {
   }
 
   .brand-lockup strong {
-    font-size: 30px;
+    font-size: 32px;
   }
 
   .identity,
   .account-block {
     grid-row: 2;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .money-separator {

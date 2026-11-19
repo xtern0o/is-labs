@@ -118,7 +118,7 @@ async function submit() {
   color: #ffedcb;
   background: var(--burgundy);
   font:
-    800 11px/1 'Courier New',
+    800 13px/1 'Courier New',
     monospace;
 }
 
@@ -139,7 +139,7 @@ label {
   gap: 5px;
   color: var(--brick);
   font:
-    800 10px/1 'Courier New',
+    800 12px/1 'Courier New',
     monospace;
 }
 
@@ -150,7 +150,7 @@ input {
   outline: none;
   background: #fffaf0;
   font:
-    700 12px/1.2 'Courier New',
+    700 14px/1.2 'Courier New',
     monospace;
 }
 

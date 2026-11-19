@@ -187,14 +187,14 @@ onUnmounted(stopUpdates)
 .window-titlebar h1 {
   margin: 0;
   font:
-    800 13px/1 'Courier New',
+    800 15px/1 'Courier New',
     monospace;
   letter-spacing: 0.08em;
 }
 
 .window-titlebar > span {
   font:
-    700 10px/1 'Courier New',
+    700 12px/1 'Courier New',
     monospace;
   text-transform: uppercase;
 }
@@ -229,7 +229,7 @@ onUnmounted(stopUpdates)
     inset 1px 1px #fff0cc,
     inset -1px -1px #a76848;
   font:
-    800 12px/1 'Courier New',
+    800 14px/1 'Courier New',
     monospace;
   text-transform: uppercase;
   cursor: pointer;
@@ -266,7 +266,7 @@ onUnmounted(stopUpdates)
   margin: 0;
   color: var(--brick);
   font:
-    700 10px/1.4 'Courier New',
+    700 12px/1.4 'Courier New',
     monospace;
   text-transform: uppercase;
 }
@@ -288,7 +288,7 @@ onUnmounted(stopUpdates)
   background: var(--brick);
   border-right: 2px solid var(--ink);
   font:
-    800 11px/1 'Courier New',
+    800 13px/1 'Courier New',
     monospace;
 }
 
@@ -301,7 +301,7 @@ onUnmounted(stopUpdates)
   color: var(--ink);
   background: white;
   font:
-    700 12px/1 'Courier New',
+    700 14px/1 'Courier New',
     monospace;
 }
 
@@ -325,7 +325,7 @@ onUnmounted(stopUpdates)
   background: var(--brick);
   border: 2px solid var(--ink);
   font:
-    700 10px/1.3 'Courier New',
+    700 12px/1.3 'Courier New',
     monospace;
   text-transform: uppercase;
 }
@@ -337,7 +337,7 @@ onUnmounted(stopUpdates)
   justify-content: center;
   gap: 17px;
   font:
-    800 11px/1 'Courier New',
+    800 13px/1 'Courier New',
     monospace;
 }
 
@@ -349,7 +349,7 @@ onUnmounted(stopUpdates)
   padding: 2px 4px;
   color: #fff1ca;
   background: var(--brick);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 @media (max-width: 760px) {

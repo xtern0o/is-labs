@@ -1,6 +1,9 @@
 package org.example.service.importing
 
+import org.example.aspect.LogJpaL2CacheStats
+import org.example.dto.importing.response.ImportFileInfo
 import org.example.dto.importing.response.ImportHistoryResponse
+import org.example.dto.storage.response.StoredFileInfoResponse
 import org.example.entity.ImportHistory
 import org.example.entity.enums.ImportStatus
 import org.example.entity.toResponse
@@ -35,12 +38,64 @@ class ImportHistoryService(
         )
     }
 
+    /**
+     * После загрузки в S3 прикрепляем мета информацию о файле
+     * REQUIRES_NEW, чтобы метаданные зафиксировались независимо от основной транзакции импорта
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun attachFile(
+        historyId: UUID,
+        fileInfo: StoredFileInfoResponse
+    ): ImportHistoryResponse {
+        val history = historyRepository.findById(historyId).orElseThrow()
+
+        return history.apply {
+            fileName = fileInfo.originalFileName
+            fileSize = fileInfo.size
+            fileETag = fileInfo.eTag
+            fileContentType = fileInfo.contentType
+            fileObjectKey = fileInfo.key
+            status = ImportStatus.FILE_STORED
+        }.toResponse()
+    }
+
+    @LogJpaL2CacheStats
+    @Transactional(readOnly = true)
+    fun getFileInfo(
+        historyId: UUID,
+        requesterId: UUID,
+        isAdmin: Boolean,
+    ): ImportFileInfo {
+        val history = historyRepository.findById(historyId).orElseThrow {
+            NoSuchElementException("import history $historyId not found")
+        }
+
+        if (!isAdmin && history.user.id != requesterId) {
+            throw IllegalStateException("access denied")
+        }
+
+        return ImportFileInfo(
+            objectKey = requireNotNull(history.fileObjectKey) {
+                "file is not attached to import history"
+            },
+            fileName = history.fileName ?: "import.hocon",
+            contentType = history.fileContentType,
+        )
+    }
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun markFailed(historyId: UUID) {
         val history = historyRepository.findById(historyId).orElseThrow()
         history.status = ImportStatus.FAILED
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun markPrepared(historyId: UUID) {
+        val history = historyRepository.findById(historyId).orElseThrow()
+        history.status = ImportStatus.PREPARED
+    }
+
+    @LogJpaL2CacheStats
     @PreAuthorize("#userId.toString() == authentication.name or hasRole('ADMIN')")
     @Transactional(readOnly = true)
     fun getPageByUserId(
@@ -52,6 +107,7 @@ class ImportHistoryService(
         return history.map { it.toResponse() }
     }
 
+    @LogJpaL2CacheStats
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
     fun getPage(

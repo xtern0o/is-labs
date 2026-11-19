@@ -1,5 +1,6 @@
 package org.example.service.person
 
+import org.example.aspect.LogJpaL2CacheStats
 import org.example.dto.person.request.PersonUpsertRequest
 import org.example.dto.person.response.PersonResponse
 import org.example.entity.Location
@@ -21,6 +22,7 @@ class PersonService(
     private val movieRepository: MovieRepository
 ) {
 
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getPage(nameFilter: String?, pageable: Pageable): Page<PersonResponse> {
         val persons = if (nameFilter.isNullOrBlank()) {
@@ -32,6 +34,7 @@ class PersonService(
         return persons.map { it.toResponse() }
     }
 
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getById(id: Int): PersonResponse =
         findPerson(id).toResponse()

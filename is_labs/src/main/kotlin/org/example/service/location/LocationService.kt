@@ -1,5 +1,6 @@
 package org.example.service.location
 
+import org.example.aspect.LogJpaL2CacheStats
 import org.example.dto.location.request.LocationUpsertRequest
 import org.example.dto.location.response.LocationResponse
 import org.example.entity.Location
@@ -17,6 +18,7 @@ class LocationService(
     private val locationRepository: LocationRepository,
     private val personRepository: PersonRepository
 ) {
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getPage(
         nameFilter: String?,
@@ -31,6 +33,7 @@ class LocationService(
         return locations.map { it.toResponse() }
     }
 
+    @LogJpaL2CacheStats
     @Transactional(readOnly = true)
     fun getById(id: Int): LocationResponse =
         findLocation(id).toResponse()

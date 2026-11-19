@@ -55,7 +55,7 @@ select {
     inset 1px 1px #fff4d9,
     inset -1px -1px #9d5a3f;
   font:
-    800 11px/1 'Courier New',
+    800 13px/1 'Courier New',
     monospace;
   cursor: pointer;
 }
@@ -88,7 +88,7 @@ select {
 }
 .xp-button--compact {
   padding: 0 9px;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .text-button {
